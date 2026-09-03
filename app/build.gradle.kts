@@ -16,8 +16,8 @@ android {
         applicationId = "com.n9nik.imagecompressor"
         minSdk = 24
         targetSdk = 36
-        versionCode = 1
-        versionName = "1.0.0"
+        versionCode = 2
+        versionName = "1.0.1"
 
         manifestPlaceholders["admobAppId"] = configuredAdMobAppId.get()
         buildConfigField("String", "ADMOB_BANNER_ID", "\"${configuredBannerId.get()}\"")
@@ -66,8 +66,8 @@ android {
             if (keystoreFile.exists() && hasSecrets) {
                 signingConfig = signingConfigs.getByName("release")
             }
-            isMinifyEnabled = true
-            isShrinkResources = true
+            isMinifyEnabled = false
+            isShrinkResources = false
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
