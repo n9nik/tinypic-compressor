@@ -96,8 +96,9 @@ jobs:
           yes | sdkmanager --licenses >/dev/null 2>&1 || true
           sdkmanager --install \
             "platform-tools" \
-            "platforms;android-37" \
-            "build-tools;36.0.0"
+            "platforms;android-36" \
+            "platforms;android-35" \
+            "build-tools;36.0.0" || true
 
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v4
