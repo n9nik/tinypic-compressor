@@ -25,7 +25,7 @@ concurrency:
 
 env:
   JAVA_VERSION: "17"
-  GRADLE_VERSION: "9.3.1"
+  GRADLE_VERSION: "8.10.2"
 
 jobs:
   build-debug-apk:
