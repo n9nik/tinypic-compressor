@@ -98,8 +98,7 @@ jobs:
             "platform-tools" \
             "platforms;android-36" \
             "platforms;android-35" \
-            "platforms;android-37" \
-            "build-tools;36.0.0" || true
+            "build-tools;36.0.0"
 
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v4
@@ -119,6 +118,24 @@ jobs:
           fi
           chmod +x gradlew
 
+      - name: Decode upload keystore from secrets
+        if: ${{ secrets.UPLOAD_KEYSTORE_BASE64 != '' }}
+        working-directory: ${{ steps.project.outputs.dir }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p app
+          printf '%s' "${{ secrets.UPLOAD_KEYSTORE_BASE64 }}" | base64 --decode > app/upload-keystore.jks
+          echo "Keystore decoded:"
+          ls -lh app/upload-keystore.jks
+          # Verify keystore integrity without exposing passwords in logs
+          keytool -list -keystore app/upload-keystore.jks -storepass "${{ secrets.UPLOAD_KEYSTORE_PASSWORD }}" 2>&1 | head -n 20
+          keytool -list -keystore app/upload-keystore.jks -storepass "${{ secrets.UPLOAD_KEYSTORE_PASSWORD }}" -alias "${{ secrets.UPLOAD_KEY_ALIAS }}" || {
+            echo "ERROR: keytool could not find alias ${{ secrets.UPLOAD_KEY_ALIAS }} in keystore"
+            exit 1
+          }
+          echo "Keystore verification passed."
+
       - name: Run tests and build debug APK
         working-directory: ${{ steps.project.outputs.dir }}
         shell: bash
@@ -127,12 +144,27 @@ jobs:
       - name: Build release AAB for Play Console
         working-directory: ${{ steps.project.outputs.dir }}
         shell: bash
+        env:
+          UPLOAD_KEYSTORE_PATH: app/upload-keystore.jks
+          UPLOAD_KEYSTORE_PASSWORD: ${{ secrets.UPLOAD_KEYSTORE_PASSWORD }}
+          UPLOAD_KEY_ALIAS: ${{ secrets.UPLOAD_KEY_ALIAS }}
+          UPLOAD_KEY_PASSWORD: ${{ secrets.UPLOAD_KEY_PASSWORD }}
+          CI: "true"
         run: |
           set -euo pipefail
-          echo "Building release AAB with sample AdMob IDs (OK for closed testing)"
-          ./gradlew --no-daemon --stacktrace bundleRelease \
-            -PADMOB_APP_ID=ca-app-pub-3940256099942544~3347511713 \
-            -PADMOB_BANNER_ID=ca-app-pub-3940256099942544/6300978111
+          if [[ -f "app/upload-keystore.jks" ]]; then
+            echo "Building SIGNED release AAB (secrets present)"
+            ./gradlew --no-daemon --stacktrace bundleRelease \
+              -PADMOB_APP_ID=ca-app-pub-3940256099942544~3347511713 \
+              -PADMOB_BANNER_ID=ca-app-pub-3940256099942544/6300978111
+          else
+            echo "No keystore found - build should fail in CI due to missing secrets"
+            echo "To build signed AAB, add GitHub Secrets:"
+            echo "  UPLOAD_KEYSTORE_BASE64, UPLOAD_KEYSTORE_PASSWORD, UPLOAD_KEY_ALIAS, UPLOAD_KEY_PASSWORD"
+            ./gradlew --no-daemon --stacktrace bundleRelease \
+              -PADMOB_APP_ID=ca-app-pub-3940256099942544~3347511713 \
+              -PADMOB_BANNER_ID=ca-app-pub-3940256099942544/6300978111
+          fi
 
       - name: Create APK checksums
         if: success()
