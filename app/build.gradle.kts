@@ -10,12 +10,12 @@ val configuredBannerId = providers.gradleProperty("ADMOB_BANNER_ID").orElse(samp
 
 android {
     namespace = "com.n9nik.imagecompressor"
-    compileSdk = 36
+    compileSdk = 37
 
     defaultConfig {
         applicationId = "com.n9nik.imagecompressor"
         minSdk = 24
-        targetSdk = 36
+        targetSdk = 37
         versionCode = 1
         versionName = "1.0.0"
 
