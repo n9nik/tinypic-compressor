@@ -23,6 +23,15 @@ android {
         buildConfigField("String", "ADMOB_BANNER_ID", "\"${configuredBannerId.get()}\"")
     }
 
+    signingConfigs {
+        create("release") {
+            storeFile = rootProject.file("keystore/tinypic-upload.jks")
+            storePassword = System.getenv("KEYSTORE_PASSWORD") ?: providers.gradleProperty("KEYSTORE_PASSWORD").orNull
+            keyAlias = System.getenv("KEY_ALIAS") ?: providers.gradleProperty("KEY_ALIAS").orNull
+            keyPassword = System.getenv("KEY_PASSWORD") ?: providers.gradleProperty("KEY_PASSWORD").orNull
+        }
+    }
+
     buildFeatures {
         compose = true
         buildConfig = true
@@ -39,6 +48,7 @@ android {
             versionNameSuffix = "-debug"
         }
         release {
+            signingConfig = signingConfigs.getByName("release")
             isMinifyEnabled = true
             isShrinkResources = true
             proguardFiles(
