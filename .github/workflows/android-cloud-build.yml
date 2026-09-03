@@ -119,11 +119,14 @@ jobs:
           chmod +x gradlew
 
       - name: Decode upload keystore from secrets
-        if: ${{ secrets.UPLOAD_KEYSTORE_BASE64 != '' }}
         working-directory: ${{ steps.project.outputs.dir }}
         shell: bash
         run: |
           set -euo pipefail
+          if [[ -z "${{ secrets.UPLOAD_KEYSTORE_BASE64 }}" ]]; then
+            echo "No UPLOAD_KEYSTORE_BASE64 secret set, skipping keystore decode (debug build only)"
+            exit 0
+          fi
           mkdir -p app
           printf '%s' "${{ secrets.UPLOAD_KEYSTORE_BASE64 }}" | base64 --decode > app/upload-keystore.jks
           echo "Keystore decoded:"
