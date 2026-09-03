@@ -26,9 +26,9 @@ android {
     signingConfigs {
         create("release") {
             storeFile = rootProject.file("keystore/tinypic-upload.jks")
-            storePassword = System.getenv("KEYSTORE_PASSWORD") ?: ""
-            keyAlias = System.getenv("KEY_ALIAS") ?: ""
-            keyPassword = System.getenv("KEY_PASSWORD") ?: ""
+            storePassword = System.getenv("KEYSTORE_PASSWORD") ?: "TinyPic2026!"
+            keyAlias = System.getenv("KEY_ALIAS") ?: "tinypic-upload"
+            keyPassword = System.getenv("KEY_PASSWORD") ?: "TinyPic2026!"
         }
     }
 
