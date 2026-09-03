@@ -98,6 +98,7 @@ jobs:
             "platform-tools" \
             "platforms;android-36" \
             "platforms;android-35" \
+            "platforms;android-37" \
             "build-tools;36.0.0" || true
 
       - name: Set up Gradle
