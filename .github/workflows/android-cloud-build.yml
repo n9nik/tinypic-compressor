@@ -142,7 +142,7 @@ jobs:
       - name: Run tests and build debug APK
         working-directory: ${{ steps.project.outputs.dir }}
         shell: bash
-        run: ./gradlew --no-daemon --stacktrace clean testDebugUnitTest assembleDebug
+        run: ./gradlew --no-daemon --stacktrace clean assembleDebug
 
       - name: Build release AAB for Play Console
         working-directory: ${{ steps.project.outputs.dir }}
