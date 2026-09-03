@@ -157,7 +157,7 @@ object ImageCompressor {
         return when {
             bytes < 1024 -> "$bytes B"
             bytes < 1024 * 1024 -> "${(bytes / 1024f).let { String.format("%.1f KB", it) }}"
-            else -> "${bytes / (1024f * 1024f).let { String.format("%.2f MB", it) }}"
+            else -> "${(bytes / (1024f * 1024f)).let { String.format("%.2f MB", it) }}"
         }
     }
 
