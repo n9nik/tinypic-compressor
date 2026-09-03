@@ -10,12 +10,12 @@ val configuredBannerId = providers.gradleProperty("ADMOB_BANNER_ID").orElse(samp
 
 android {
     namespace = "com.n9nik.imagecompressor"
-    compileSdk = 37
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "com.n9nik.imagecompressor"
         minSdk = 24
-        targetSdk = 37
+        targetSdk = 36
         versionCode = 1
         versionName = "1.0.0"
 
@@ -104,12 +104,12 @@ tasks.matching { it.name == "preReleaseBuild" }.configureEach {
 }
 
 dependencies {
-    val composeBom = platform("androidx.compose:compose-bom:2026.08.00")
+    val composeBom = platform("androidx.compose:compose-bom:2025.04.01")
     implementation(composeBom)
     androidTestImplementation(composeBom)
 
     implementation("androidx.core:core-ktx:1.19.0")
-    implementation("androidx.activity:activity-compose:1.12.0")
+    implementation("androidx.activity:activity-compose:1.9.3")
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.11.0")
     implementation("androidx.compose.ui:ui")
     implementation("androidx.compose.ui:ui-tooling-preview")
