@@ -10,7 +10,7 @@ val configuredBannerId = providers.gradleProperty("ADMOB_BANNER_ID").orElse(samp
 
 android {
     namespace = "com.n9nik.imagecompressor"
-    compileSdk = 37
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "com.n9nik.imagecompressor"
@@ -25,10 +25,43 @@ android {
 
     signingConfigs {
         create("release") {
-            storeFile = rootProject.file("keystore/tinypic-upload.jks")
-            storePassword = System.getenv("KEYSTORE_PASSWORD") ?: "TinyPic2026!"
-            keyAlias = System.getenv("KEY_ALIAS") ?: "tinypic-upload"
-            keyPassword = System.getenv("KEY_PASSWORD") ?: "TinyPic2026!"
+            // Env-based signing, no hardcoded secrets
+            val isCi = System.getenv("CI") == "true"
+            val keystorePath = System.getenv("UPLOAD_KEYSTORE_PATH") ?: "app/upload-keystore.jks"
+            val keystoreFile = rootProject.file(keystorePath)
+            val storePasswordEnv = System.getenv("UPLOAD_KEYSTORE_PASSWORD") ?: System.getenv("KEYSTORE_PASSWORD")
+            val keyAliasEnv = System.getenv("UPLOAD_KEY_ALIAS") ?: System.getenv("KEY_ALIAS")
+            val keyPasswordEnv = System.getenv("UPLOAD_KEY_PASSWORD") ?: System.getenv("KEY_PASSWORD")
+
+            if (isCi) {
+                if (storePasswordEnv == null || keyAliasEnv == null || keyPasswordEnv == null) {
+                    throw GradleException(
+                        "Missing signing secrets in CI: set UPLOAD_KEYSTORE_BASE64, " +
+                        "UPLOAD_KEYSTORE_PASSWORD, UPLOAD_KEY_ALIAS, UPLOAD_KEY_PASSWORD " +
+                        "as GitHub Actions secrets. See BUILD_NOTES.md"
+                    )
+                }
+                if (!keystoreFile.exists()) {
+                    throw GradleException(
+                        "Keystore file not found at $keystorePath. " +
+                        "Ensure workflow decodes UPLOAD_KEYSTORE_BASE64 to that path before bundleRelease."
+                    )
+                }
+            }
+
+            // Only configure signing when secrets are present; otherwise leave unsigned for debug/PR
+            if (storePasswordEnv != null && keyAliasEnv != null && keyPasswordEnv != null) {
+                storeFile = keystoreFile
+                storePassword = storePasswordEnv
+                keyAlias = keyAliasEnv
+                keyPassword = keyPasswordEnv
+            } else if (keystoreFile.exists()) {
+                // Local dev fallback: file exists but env missing - set file but empty passwords will cause clear error at signing time
+                storeFile = keystoreFile
+                storePassword = storePasswordEnv ?: ""
+                keyAlias = keyAliasEnv ?: ""
+                keyPassword = keyPasswordEnv ?: ""
+            }
         }
     }
 
@@ -48,8 +81,11 @@ android {
             versionNameSuffix = "-debug"
         }
         release {
-            val keystoreFile = rootProject.file("keystore/tinypic-upload.jks")
-            if (keystoreFile.exists()) {
+            // Apply signing only when keystore file + secrets exist; allows PR/debug builds without signing
+            val keystorePath = System.getenv("UPLOAD_KEYSTORE_PATH") ?: "app/upload-keystore.jks"
+            val keystoreFile = rootProject.file(keystorePath)
+            val hasSecrets = (System.getenv("UPLOAD_KEYSTORE_PASSWORD") ?: System.getenv("KEYSTORE_PASSWORD")) != null
+            if (keystoreFile.exists() && hasSecrets) {
                 signingConfig = signingConfigs.getByName("release")
             }
             isMinifyEnabled = true
@@ -68,15 +104,18 @@ android {
 
 val verifyReleaseAds by tasks.registering {
     group = "verification"
-    description = "Prevents a production bundle from shipping with Google's sample ad IDs."
+    description = "Warns if production bundle uses Google's sample ad IDs (allowed for closed testing)."
     doLast {
-        val isCi = System.getenv("CI") == "true"
-        if (!isCi) {
+        if (configuredAdMobAppId.get() == sampleAdMobAppId || configuredBannerId.get() == sampleBannerId) {
+            logger.warn("WARNING: Using Google sample AdMob IDs - OK for closed testing, replace with real IDs before Production.")
+        }
+        val isProduction = System.getenv("PRODUCTION") == "true"
+        if (isProduction) {
             check(configuredAdMobAppId.get() != sampleAdMobAppId) {
-                "Set ADMOB_APP_ID in ~/.gradle/gradle.properties before building release."
+                "PRODUCTION=true but ADMOB_APP_ID is still sample ID. Set real AdMob App ID."
             }
             check(configuredBannerId.get() != sampleBannerId) {
-                "Set ADMOB_BANNER_ID in ~/.gradle/gradle.properties before building release."
+                "PRODUCTION=true but ADMOB_BANNER_ID is still sample ID. Set real Banner ID."
             }
         }
     }
