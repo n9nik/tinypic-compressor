@@ -33,7 +33,10 @@ android {
             val keyAliasEnv = System.getenv("UPLOAD_KEY_ALIAS") ?: System.getenv("KEY_ALIAS")
             val keyPasswordEnv = System.getenv("UPLOAD_KEY_PASSWORD") ?: System.getenv("KEY_PASSWORD")
 
-            if (isCi) {
+            // In CI, only enforce signing when building a release artifact.
+            // Debug/unit-test builds should not require upload secrets.
+            val isReleaseBuild = gradle.startParameter.taskNames.any { it.contains("Release", ignoreCase = true) }
+            if (isCi && isReleaseBuild) {
                 if (storePasswordEnv == null || keyAliasEnv == null || keyPasswordEnv == null) {
                     throw GradleException(
                         "Missing signing secrets in CI: set UPLOAD_KEYSTORE_BASE64, " +
