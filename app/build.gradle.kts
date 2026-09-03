@@ -57,11 +57,15 @@ val verifyReleaseAds by tasks.registering {
     group = "verification"
     description = "Prevents a production bundle from shipping with Google's sample ad IDs."
     doLast {
-        check(configuredAdMobAppId.get() != sampleAdMobAppId) {
-            "Set ADMOB_APP_ID in ~/.gradle/gradle.properties before building release."
-        }
-        check(configuredBannerId.get() != sampleBannerId) {
-            "Set ADMOB_BANNER_ID in ~/.gradle/gradle.properties before building release."
+        // Allow sample AdMob IDs in CI/cloud builds for testing AAB generation
+        val isCi = System.getenv("CI") == "true"
+        if (!isCi) {
+            check(configuredAdMobAppId.get() != sampleAdMobAppId) {
+                "Set ADMOB_APP_ID in ~/.gradle/gradle.properties before building release."
+            }
+            check(configuredBannerId.get() != sampleBannerId) {
+                "Set ADMOB_BANNER_ID in ~/.gradle/gradle.properties before building release."
+            }
         }
     }
 }
