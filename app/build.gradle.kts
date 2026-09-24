@@ -3,8 +3,8 @@ plugins {
     id("org.jetbrains.kotlin.plugin.compose")
 }
 
-val sampleAdMobAppId = "ca-app-pub-3940256099942544~3347511713"
-val sampleBannerId = "ca-app-pub-3940256099942544/6300978111"
+val sampleAdMobAppId = "ca-app-pub-7487667838741597~8640855967"
+val sampleBannerId = "ca-app-pub-7487667838741597/5978253353"
 val configuredAdMobAppId = providers.gradleProperty("ADMOB_APP_ID").orElse(sampleAdMobAppId)
 val configuredBannerId = providers.gradleProperty("ADMOB_BANNER_ID").orElse(sampleBannerId)
 
@@ -16,7 +16,7 @@ android {
         applicationId = "com.n9nik.imagecompressor"
         minSdk = 24
         targetSdk = 36
-        versionCode = 2
+        versionCode = 3
         versionName = "1.0.1"
 
         manifestPlaceholders["admobAppId"] = configuredAdMobAppId.get()
